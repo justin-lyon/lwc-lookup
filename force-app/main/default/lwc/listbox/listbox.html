@@ -1,0 +1,17 @@
+<template>
+  <ul class="slds-listbox slds-listbox_vertical" role="presentation" >
+    <template for:item="record" for:each={records}>
+      <li key={record.Id}
+        class="slds-listbox__item"
+        role="presentation" >
+
+        <c-listbox-item record={record}
+          title={title}
+          context={context}
+          active-id={activeId}
+          icon-name={iconName}
+          onselected={handleSelected} ></c-listbox-item>
+      </li>
+    </template>
+  </ul>
+</template>
