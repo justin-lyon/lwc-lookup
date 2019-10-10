@@ -51,20 +51,4 @@ private class LookupAuraServiceTest {
 
 		System.assertEquals(5, results[0].size());
 	}
-
-	static TestMethod void getSelectedRecord_givenId_shouldGetOneRecord() {
-		Account acc = [ SELECT Id FROM Account WHERE Name = 'Test 1' LIMIT 1];
-		LookupAuraService.Searchable searcher = new LookupAuraService.Searchable();
-		searcher.searchTerm = 'test';
-		searcher.objectName = 'Account';
-		searcher.fields = new List<String> { 'Name', 'Id' };
-
-		Test.startTest();
-
-			List<Account> accounts = (List<Account>) JSON.deserialize(LookupAuraService.getSelectedRecord(acc.Id, searcher), List<Account>.class);
-
-		Test.stopTest();
-
-		System.assertEquals(1, accounts.size());
-	}
 }

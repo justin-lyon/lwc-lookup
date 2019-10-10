@@ -24,16 +24,6 @@ public with sharing class LookupAuraService {
 		return JSON.serialize(search.query(query));
 	}
 
-	@AuraEnabled(cacheable=true)
-	public static String getSelectedRecord(Id recordId, Searchable searcher) {
-		List<String> expr = new List<String>();
-		expr.add('SELECT ' + String.join(searcher.fields, ', '));
-		expr.add('FROM ' + searcher.objectName);
-		expr.add('WHERE Id = \'' + String.escapeSingleQuotes(recordId) + '\'');
-		expr.add('LIMIT 1');
-		return JSON.serialize(Database.query(String.join(expr, ' ')));
-	}
-
 	private static String getReturning(String objectName, List<String> fields) {
 		List<String> returning = new List<String>();
 		String objectWithFields = objectName + (fields.isEmpty() ? '' : joinReturnFields(fields));

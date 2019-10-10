@@ -7,10 +7,6 @@ export default class Listbox extends LightningElement {
   @api iconName
   @api activeId
 
-  get hasRecords () {
-    return this.records.length > 0
-  }
-
   @api
   selectItem () {
     const items = this.template.querySelectorAll('c-listbox-item')

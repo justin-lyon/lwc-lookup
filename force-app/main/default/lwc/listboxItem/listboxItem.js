@@ -15,6 +15,7 @@ export default class ListboxItem extends LightningElement {
   get label () { return this.record[this.title] }
   get subLabel () { return this.record[this.context] }
   get isActive () { return this.activeId === this.record.Id }
+
   get itemClasses () {
     const classes = [
       'slds-media',

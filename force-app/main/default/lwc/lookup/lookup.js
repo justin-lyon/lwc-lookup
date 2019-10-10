@@ -1,7 +1,6 @@
 import { LightningElement, api, track } from 'lwc'
 import getRecent from '@salesforce/apex/LookupAuraService.getRecent'
 import getRecords from '@salesforce/apex/LookupAuraService.getRecords'
-import getSelectedRecord from '@salesforce/apex/LookupAuraService.getSelectedRecord'
 
 const ARROW_UP = 'ArrowUp'
 const ARROW_DOWN = 'ArrowDown'
@@ -26,17 +25,14 @@ export default class Lookup extends LightningElement {
   @api title = 'Name'
   @api context = 'Id'
 
-  get isReadOnly () {
-    return this.record ? true : false
+  connectedCallback () {
+    this.requestRecent()
   }
 
-  get showListbox () {
-    return this.focused && this.records.length > 0 && !this.record
-  }
-
-  get showClear () {
-    return this.record || (!this.record && this.inputValue.length > 0)
-  }
+  get isReadOnly () { return this.record }
+  get showListbox () { return this.focused && this.records.length > 0 && !this.record }
+  get showClear () { return this.record || (!this.record && this.inputValue.length > 0) }
+  get hasError () { return this.error ? this.error.message : '' }
 
   get containerClasses () {
     const classes = [ 'slds-combobox_container' ]
@@ -72,14 +68,6 @@ export default class Lookup extends LightningElement {
     return classes.join(' ')
   }
 
-  get hasError () {
-    return this.error ? this.error.message : ''
-  }
-
-  connectedCallback () {
-    this.requestRecent()
-  }
-
   onKeyup (event) {
     this.inputValue = event.target.value
     this.error = null
@@ -108,22 +96,11 @@ export default class Lookup extends LightningElement {
     }
   }
 
-  setFocus (event) {
-    this.focused = event.type === 'focus'
-  }
-
   handleSelected (event) {
     this.selected = event.detail
+    this.record = this.records.find(record => record.Id === this.selected)
+    this.inputValue = this.record[this.title]
     this.fireSelected()
-    this.getSelected()
-  }
-
-  getSearcher () {
-    return {
-      searchTerm: this.inputValue,
-      objectName: this.sobjectName,
-      fields: [ this.title, this.context ]
-    }
   }
 
   search () {
@@ -165,32 +142,6 @@ export default class Lookup extends LightningElement {
       })
   }
 
-  sortAlpha (a, b) {
-    const aName = a[this.title].toLowerCase()
-    const bName = b[this.title].toLowerCase()
-
-    if (aName < bName) return -1
-    if (aName > bName) return 1
-
-    return 0
-  }
-
-  getSelected () {
-    const searcher = this.getSearcher()
-    this.error = null
-
-    getSelectedRecord({ recordId: this.selected, searcher })
-      .then(data => {
-        this.record = JSON.parse(data)[0]
-        this.inputValue = this.record[this.title]
-      })
-      .catch(error => {
-        console.error('Error getting selected record', error)
-        this.record = null
-        this.error = error
-      })
-  }
-
   clearSelection () {
     this.selected = ''
     this.record = null
@@ -198,10 +149,6 @@ export default class Lookup extends LightningElement {
     this.error = null
     this.requestRecent()
     this.fireSelected()
-  }
-
-  getRecordIds () {
-    return this.records.map(record => record.Id)
   }
 
   fireSelected () {
@@ -227,5 +174,31 @@ export default class Lookup extends LightningElement {
   selectItem () {
     const listbox = this.template.querySelector('c-listbox')
     listbox.selectItem()
+  }
+
+  setFocus (event) {
+    this.focused = event.type === 'focus'
+  }
+
+  getSearcher () {
+    return {
+      searchTerm: this.inputValue,
+      objectName: this.sobjectName,
+      fields: [ this.title, this.context ]
+    }
+  }
+
+  getRecordIds () {
+    return this.records.map(record => record.Id)
+  }
+
+  sortAlpha (a, b) {
+    const aName = a[this.title].toLowerCase()
+    const bName = b[this.title].toLowerCase()
+
+    if (aName < bName) return -1
+    if (aName > bName) return 1
+
+    return 0
   }
 }
