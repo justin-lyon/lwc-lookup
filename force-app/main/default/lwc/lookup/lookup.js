@@ -1,4 +1,5 @@
 import { LightningElement, api, track } from 'lwc'
+import { ShowToastEvent } from 'lightning/platformShowToastEvent'
 import getRecent from '@salesforce/apex/LookupAuraService.getRecent'
 import getRecords from '@salesforce/apex/LookupAuraService.getRecords'
 
@@ -112,6 +113,14 @@ export default class Lookup extends LightningElement {
         const newData = JSON.parse(data)
         this.records = newData.flat().sort((a, b) => this.sortAlpha(a, b))
         this.recordIds = this.getRecordIds()
+
+        if (this.records.length === 0) {
+          this.fireToast({
+            title: 'Info',
+            variant: 'info',
+            message: 'No records found, please refine your search.'
+          })
+        }
       })
       .catch(error => {
         console.error('Error searching records: ', error)
@@ -200,5 +209,10 @@ export default class Lookup extends LightningElement {
     if (aName > bName) return 1
 
     return 0
+  }
+
+  fireToast (notification) {
+    const toast = new ShowToastEvent(notification)
+    this.dispatchEvent(toast)
   }
 }
