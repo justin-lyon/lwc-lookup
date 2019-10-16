@@ -24,7 +24,7 @@ export default class Lookup extends LightningElement {
 
   @api fieldLabel = 'Search'
   @api title = 'Name'
-  @api context = 'Id'
+  @api subtitle = 'Id'
 
   connectedCallback () {
     this.requestRecent()
@@ -193,7 +193,7 @@ export default class Lookup extends LightningElement {
     return {
       searchTerm: this.inputValue,
       objectName: this.sobjectName,
-      fields: [ this.title, this.context ]
+      fields: [ this.title, this.subtitle ]
     }
   }
 
