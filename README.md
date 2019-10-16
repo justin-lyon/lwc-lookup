@@ -15,7 +15,7 @@ An SObject Generic Lookup component built with LWCs.
           <div class="slds-p-horizontal_medium">
             <c-lookup sobject-name="Account"
               title="Name"
-              context="Phone"
+              subtitle="Phone"
               onselected={handleAccountLookup}
               icon-name="standard:account"></c-lookup>
           </div>
