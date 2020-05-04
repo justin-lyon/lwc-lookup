@@ -1,7 +1,15 @@
 <template>
   <div class="slds-form-element">
-    <label class="slds-form-element__label"
-      for="searchInput" >{fieldLabel}</label>
+    <label
+      class="slds-form-element__label"
+      for="searchInput" >
+
+      <abbr if:true={required}
+        class="slds-required"
+        title="required">* </abbr>
+
+      {fieldLabel}
+    </label>
     <div class="slds-form-element__control">
       <div class={containerClasses}>
 
@@ -33,10 +41,12 @@
               onblur={setFocus}
               minlength="3"
               pattern="[a-zA-Z]*"
+              autocomplete="off"
               aria-autocomplete="list"
               aria-controls="searchInput"
               role="textbox"
               readonly={isReadOnly}
+              required={required}
               placeholder="Search...">
 
             <button if:true={showClear}
@@ -50,7 +60,7 @@
             </button>
           </div>
 
-          <div if:true={hasError} class="slds-text-color_error">
+          <div if:true={hasError} class="slds-form-element__help">
             {error.message}
           </div>
 

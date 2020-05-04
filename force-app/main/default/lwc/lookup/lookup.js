@@ -1,5 +1,6 @@
-import { LightningElement, api, track } from 'lwc'
+import { LightningElement, api, track, wire } from 'lwc'
 import { ShowToastEvent } from 'lightning/platformShowToastEvent'
+import getOneRecordById from '@salesforce/apex/LookupAuraService.getOneRecordById'
 import getRecent from '@salesforce/apex/LookupAuraService.getRecent'
 import getRecords from '@salesforce/apex/LookupAuraService.getRecords'
 
@@ -16,24 +17,52 @@ export default class Lookup extends LightningElement {
   @track selected = ''
   @track record
   @track error
-  @track recordIds
   @track activeId = ''
+
+  @track _value
+  @api
+  get value () { return this._value }
+  set value (val) {
+    this._value = val
+    if (val) {
+      this.requestOneById()
+    }
+  }
 
   @api sobjectName
   @api iconName
+  @api name
 
   @api fieldLabel = 'Search'
   @api title = 'Name'
   @api subtitle = 'Id'
+  @api readOnly = false
+  @api required = false
+  @api messageWhenInputError = 'This field is required.'
 
-  connectedCallback () {
-    this.requestRecent()
+  @api checkValidity () {
+    return !this.required || (this.value && this.value.length > 14)
   }
 
-  get isReadOnly () { return this.record }
+  @api reportValidity () {
+    const isValid = this.checkValidity()
+    this.error = isValid ? {} : { message: this.messageWhenInputError }
+    return isValid
+  }
+
+  connectedCallback () {
+    if (this.value) {
+      this.requestOneById()
+    } else {
+      this.requestRecent()
+    }
+  }
+
+  get isReadOnly () { return this.readOnly || this.record }
   get showListbox () { return this.focused && this.records.length > 0 && !this.record }
-  get showClear () { return this.record || (!this.record && this.inputValue.length > 0) }
+  get showClear () { return !this.readOnly && (this.record || (!this.record && this.inputValue.length > 0)) }
   get hasError () { return this.error ? this.error.message : '' }
+  get recordIds () { return this.records.map(r => r.Id) }
 
   get containerClasses () {
     const classes = [ 'slds-combobox_container' ]
@@ -66,10 +95,15 @@ export default class Lookup extends LightningElement {
     if (this.showListbox) {
       classes.push('slds-is-open')
     }
+    if (this.hasError) {
+      classes.push('slds-has-error')
+    }
+
     return classes.join(' ')
   }
 
   onKeyup (event) {
+    if (this.readOnly) return
     this.inputValue = event.target.value
     this.error = null
 
@@ -112,7 +146,6 @@ export default class Lookup extends LightningElement {
       .then(data => {
         const newData = JSON.parse(data)
         this.records = newData.flat().sort((a, b) => this.sortAlpha(a, b))
-        this.recordIds = this.getRecordIds()
 
         if (this.records.length === 0) {
           this.fireToast({
@@ -136,6 +169,24 @@ export default class Lookup extends LightningElement {
     }, 300)
   }
 
+  requestOneById () {
+    const searcher = this.getSearcher()
+    this.error = null
+
+    getOneRecordById({ searcher, recordId: this.value })
+      .then(data => {
+        const records = JSON.parse(data)
+        this.records = records
+        this.record = records[0]
+        this.selected = this.record.Id
+        this.inputValue = this.record[this.title]
+      })
+      .catch(error => {
+        console.error('Error getting record by Id', error)
+        this.error = error
+      })
+  }
+
   requestRecent () {
     const searcher = this.getSearcher()
     this.error = null
@@ -143,7 +194,6 @@ export default class Lookup extends LightningElement {
     getRecent({ searcher })
       .then(data => {
         this.records = JSON.parse(data)
-        this.recordIds = this.getRecordIds()
       })
       .catch(error => {
         console.error('Error requesting recents', error)
@@ -181,12 +231,17 @@ export default class Lookup extends LightningElement {
   }
 
   selectItem () {
+    if (!this.records || this.records.length === 0) return
+
     const listbox = this.template.querySelector('c-listbox')
     listbox.selectItem()
   }
 
   setFocus (event) {
     this.focused = event.type === 'focus'
+    if (event.type === 'blur') {
+      this.reportValidity()
+    }
   }
 
   getSearcher () {
@@ -195,10 +250,6 @@ export default class Lookup extends LightningElement {
       objectName: this.sobjectName,
       fields: [ this.title, this.subtitle ]
     }
-  }
-
-  getRecordIds () {
-    return this.records.map(record => record.Id)
   }
 
   sortAlpha (a, b) {
