@@ -2,6 +2,10 @@
 
 An SObject Generic Lookup component built with LWCs.
 
+## License
+
+[BSD3 License](./LICENSE)
+
 ![demo](lwc-lookup.gif)
 
 ## Usage
